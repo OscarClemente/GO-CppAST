@@ -23,5 +23,5 @@ func main() {
 			fmt.Printf("%d, %c\n", i, c)
 		}
 	}*/
-	token()
+	//token.token()
 }
