@@ -17,11 +17,15 @@ func main() {
 	fmt.Print(string(dat))
 	fmt.Println()
 	/*for i, c := range dat {
-		if c == '\n' {
-			fmt.Printf("%d, \\n\n", i)
-		} else {
-			fmt.Printf("%d, %c\n", i, c)
-		}
-	}*/
-	//token.token()
+			if c == '\n' {
+				fmt.Printf("%d, \\n\n", i)
+			} else {
+				fmt.Printf("%d, %c\n", i, c)
+			}
+	        }*/
+	s2 := token{}
+	fmt.Println(s2)
+	s2.print()
+
+	GetTokens()
 }
