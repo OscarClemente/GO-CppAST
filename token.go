@@ -17,8 +17,8 @@ const (
 type token struct {
 	tokenType TokenType
 	name      string
-	start     uint32
-	end       uint32
+	start     int
+	end       int
 }
 
 func (t token) print() {

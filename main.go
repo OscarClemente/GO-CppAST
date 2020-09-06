@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
-	"unicode/utf8"
 )
 
 func check(e error) {
@@ -15,7 +13,7 @@ func check(e error) {
 func main() {
 	dat, err := ioutil.ReadFile("files/foo.hpp")
 	check(err)
-	fmt.Print(dat)
+	/*fmt.Print(dat)
 	fmt.Println()
 	for i, c := range dat {
 		if c == '\n' {
@@ -55,5 +53,9 @@ func main() {
 	fmt.Printf("%c <-\n", datrunes[49])
 	fmt.Println(len(datrunes))
 
-	//GetTokens(dat)
+	comilla := []byte("'")
+	if comilla[0] == '\'' {
+		fmt.Println("YEEES")
+	}*/
+	GetTokens(dat)
 }
