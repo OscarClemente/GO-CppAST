@@ -53,7 +53,7 @@ func getChar(source []byte, start int, i int) int {
 	return i + 1
 }
 
-func GetTokens(source []byte) {
+func GetTokens(source []byte) []*token {
 	letters := []byte("abcdefghijklmnopqrstuvwxyz")
 	lettersUpper := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	numChars := []byte("0123456789")
@@ -68,7 +68,7 @@ func GetTokens(source []byte) {
 
 	i := 0
 	end := len(source)
-	//var tokenSlice []token
+	var tokenSlice []*token
 
 	for i < end {
 		// skip spaces
@@ -80,7 +80,7 @@ func GetTokens(source []byte) {
 			continue
 		}
 		if i >= end {
-			return
+			return tokenSlice
 		}
 
 		tokenType := Unknown
@@ -151,9 +151,11 @@ func GetTokens(source []byte) {
 
 		if i <= 0 {
 			fmt.Println("Invalid index, exit")
-			return
+			return tokenSlice
 		}
 
-		fmt.Println(token{tokenType, string(source[start:i]), start, i})
+		//fmt.Println(token{tokenType, string(source[start:i]), start, i})
+		tokenSlice = append(tokenSlice, &token{tokenType, string(source[start:i]), start, i})
 	}
+	return tokenSlice
 }
