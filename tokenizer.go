@@ -63,8 +63,11 @@ func GetTokens(source []byte) []*token {
 	validChars := append(alphaNumeric, extraChar...)
 	hexDigits := []byte("0123456789abcdefABCDEF")
 	intOrFloatDigits := []byte("0123456789eE-+")
+	intOrFloatDigits2 := []byte("0123456789eE-+.")
 
 	fmt.Println(hexDigits)
+	ignoreErrors := false
+	countIfs := 0
 
 	i := 0
 	end := len(source)
@@ -138,13 +141,50 @@ func GetTokens(source []byte) []*token {
 				}
 			}
 		} else if byteInSlice(source[i], numChars) { // integer
-			fmt.Println("Uninmplemented integer")
+			tokenType = Constant
+			if c == '0' && byteInSlice(source[i+1], []byte("xX")) {
+				i += 2
+				for byteInSlice(source[i], hexDigits) {
+					i++
+				}
+			} else {
+				for byteInSlice(source[i], intOrFloatDigits2) {
+					i++
+				}
+			}
+			// Handle integer and float suffixes
+			// todo implement suffixes
 		} else if c == '"' {
 			tokenType = Constant
 			i = getString(source, start, i)
 		} else if c == '\'' {
 			tokenType = Constant
 			i = getChar(source, start, i)
+		} else if c == '#' {
+			tokenType = Preprocessor
+			gotIf := source[i] == '#' &&
+				source[i+1] == 'i' &&
+				source[i+2] == 'f' &&
+				source[i+3] == ' ' &&
+				source[i+4] == ' '
+			if gotIf {
+				countIfs++
+			} else if string(source[i:i+6]) == "#endif" {
+				countIfs--
+				if countIfs == 0 {
+					ignoreErrors = false
+				}
+			}
+
+			for true {
+				/*i1 := bytes.Index(source[i:], []byte("\n"))
+				i2 := bytes.Index(source[i:], []byte("//"))
+				i3 := bytes.Index(source[i:], []byte("/*"))
+				i4 := bytes.Index(source[i:], []byte("/"))*/
+
+			}
+		} else if ignoreErrors {
+			fmt.Println("Dunno")
 		} else {
 			fmt.Println("Error")
 		}
