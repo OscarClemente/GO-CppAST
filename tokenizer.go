@@ -3,23 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math"
+	"strings"
+	"unicode"
 )
 
-const intOrFloatDigits = "01234567890eE-+"
-
-var strPrefixes = []string{"R", "u8", "u8R", "u", "uR", "U", "UR", "L", "LR"}
-
-func byteInSlice(a byte, list []byte) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func getString(source []byte, start int, i int) int {
-	i = bytes.Index(source[i+1:], []byte("\""))
+func getString(source string, start int, i int) int {
+	i = strings.Index(source[i+1:], "\"")
 	for source[i-1] == '\\' {
 		// count trailing backslashes
 		backslashCount := 1
@@ -32,19 +22,19 @@ func getString(source []byte, start int, i int) int {
 		if backslashCount%2 == 0 {
 			break
 		}
-		i = bytes.Index(source[i+1:], []byte("\""))
+		i = strings.Index(source[i+1:], "\"")
 	}
 	return i + 1
 }
 
-func getChar(source []byte, start int, i int) int {
-	i = bytes.Index(source[i+1:], []byte("'"))
+func getChar(source string, start int, i int) int {
+	i = strings.Index(source[i+1:], "'")
 	for source[i-1] == '\\' {
 		// Need special case '\\'
 		if (i-2) > start && source[i-2] == '\\' {
 			break
 		}
-		i = bytes.Index(source[i+1:], []byte("'"))
+		i = strings.Index(source[i+1:], "'")
 	}
 	// Unterminated single quotes
 	if i < 0 {
@@ -53,17 +43,41 @@ func getChar(source []byte, start int, i int) int {
 	return i + 1
 }
 
-func GetTokens(source []byte) []*token {
-	letters := []byte("abcdefghijklmnopqrstuvwxyz")
-	lettersUpper := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	numChars := []byte("0123456789")
-	extraChar := []byte("_$")
-	alphaNumeric := append(letters, lettersUpper...)
-	alphaNumeric = append(alphaNumeric, numChars...)
-	validChars := append(alphaNumeric, extraChar...)
-	hexDigits := []byte("0123456789abcdefABCDEF")
-	intOrFloatDigits := []byte("0123456789eE-+")
-	intOrFloatDigits2 := []byte("0123456789eE-+.")
+func isByteInString(b byte, s string) bool {
+	// Is there really no bytes.ContainsByte()?
+	return bytes.IndexByte([]byte(s), b) != -1
+}
+
+func isStringInStringSlice(referenceString string, ss []string) bool {
+	for _, comparationString := range ss {
+		if referenceString == comparationString {
+			return true
+		}
+	}
+	return false
+}
+
+//i = min([x for x in (i1, i2, i3, i4, end) if x != -1])
+func minPositiveValue(iSlice []int) int {
+	min := math.MaxInt32
+	for _, val := range iSlice {
+		if val >= 0 && val < min {
+			min = val
+		}
+	}
+	return min
+}
+
+func GetTokens(source string) []*token {
+	letters := "abcdefghijklmnopqrstuvwxyz"
+	numChars := "0123456789"
+	extraChar := "_$"
+	alphaNumeric := letters + strings.ToUpper(letters) + numChars
+	validChars := alphaNumeric + extraChar
+	hexDigits := "0123456789abcdefABCDEF"
+	intOrFloatDigits := "0123456789eE-+"
+	intOrFloatDigits2 := "0123456789eE-+."
+	strPrefixes := []string{"R", "u8", "u8R", "u", "uR", "U", "UR", "L", "LR"}
 
 	fmt.Println(hexDigits)
 	ignoreErrors := false
@@ -75,12 +89,8 @@ func GetTokens(source []byte) []*token {
 
 	for i < end {
 		// skip spaces
-		for i < end && source[i] == ' ' {
+		for i < end && unicode.IsSpace(rune(source[i])) {
 			i++
-		}
-		if source[i] == '\n' {
-			i++
-			continue
 		}
 		if i >= end {
 			return tokenSlice
@@ -90,30 +100,30 @@ func GetTokens(source []byte) []*token {
 		start := i
 		c := source[i]
 
-		if byteInSlice(c, alphaNumeric) || c == '_' {
+		if unicode.IsLetter(rune(c)) || c == '_' {
 			tokenType = Name
-			for byteInSlice(source[i], validChars) {
+			for isByteInString(source[i], validChars) {
 				i++
 			}
-			if source[i] == '\'' && (i-start) == 1 &&
-				(source[start] == 'u' || source[start] == 'U' || source[start] == 'L') {
-				fmt.Println(tokenType, start) // delete
+			if source[i] == '\'' && (i-start) == 1 && strings.ContainsAny("uUL", source[start:i]) {
+				//(source[start] == 'u' || source[start] == 'U' || source[start] == 'L') {
+				// u, U and L are valid prefixes
 				tokenType = Constant
 				i = getChar(source, start, i)
-			} else if source[i] == '\'' { // missing check of prefixes
+			} else if source[i] == '\'' && isStringInStringSlice(source[start:i], strPrefixes) { // missing check of prefixes
 				tokenType = Constant
 				i = getString(source, start, i)
 			}
 		} else if c == '/' && source[i+1] == '/' { // Find // comments
-			i = bytes.Index(source[i+1:], []byte("\n"))
+			i = strings.Index(source[i+1:], "\n")
 			if i == -1 {
 				i = end
 			}
 			continue
 		} else if c == '/' && source[i+1] == '*' { // Find /* comments */
-			i = bytes.Index(source[i+1:], []byte("*/")) + 2
+			i = strings.Index(source[i+1:], "*/") + 2
 			continue
-		} else if byteInSlice(c, []byte(":+-<>&|*=")) {
+		} else if isByteInString(c, ":+-<>&|*=") {
 			tokenType = Syntax
 			i++
 			newCh := source[i]
@@ -124,36 +134,39 @@ func GetTokens(source []byte) []*token {
 			} else if newCh == '=' {
 				i++
 			}
-		} else if byteInSlice(c, []byte("()[]{}~!?^%;/.,")) {
+		} else if isByteInString(c, "()[]{}~!?^%;/.,") {
 			tokenType = Syntax
 			i++
-			if c == '.' && byteInSlice(source[i], numChars) {
+			if c == '.' && isByteInString(source[i], numChars) {
 				tokenType = Constant
 				i++
-				for byteInSlice(source[i], intOrFloatDigits) {
+				for isByteInString(source[i], intOrFloatDigits) {
 					i++
 				}
-				for _, suffix := range []byte("lLfF") {
-					if suffix == source[i] {
-						i++
-						break
-					}
+				if isByteInString(source[i], "lLfF") {
+					i++
+					break
 				}
 			}
-		} else if byteInSlice(source[i], numChars) { // integer
+		} else if isByteInString(source[i], numChars) { // integer
 			tokenType = Constant
-			if c == '0' && byteInSlice(source[i+1], []byte("xX")) {
+			if c == '0' && isByteInString(source[i+1], "xX") {
 				i += 2
-				for byteInSlice(source[i], hexDigits) {
+				for isByteInString(source[i], hexDigits) {
 					i++
 				}
 			} else {
-				for byteInSlice(source[i], intOrFloatDigits2) {
+				for isByteInString(source[i], intOrFloatDigits2) {
 					i++
 				}
 			}
-			// Handle integer and float suffixes
-			// todo implement suffixes
+			for _, suffix := range []string{"ull", "ll", "ul", "l", "f", "u"} {
+				size := len(suffix)
+				if suffix == strings.ToLower(source[i:i+size]) {
+					i += size
+					break
+				}
+			}
 		} else if c == '"' {
 			tokenType = Constant
 			i = getString(source, start, i)
@@ -162,11 +175,7 @@ func GetTokens(source []byte) []*token {
 			i = getChar(source, start, i)
 		} else if c == '#' {
 			tokenType = Preprocessor
-			gotIf := source[i] == '#' &&
-				source[i+1] == 'i' &&
-				source[i+2] == 'f' &&
-				source[i+3] == ' ' &&
-				source[i+4] == ' '
+			gotIf := source[i:i+3] == "#if" && unicode.IsSpace(rune(source[i+3]))
 			if gotIf {
 				countIfs++
 			} else if string(source[i:i+6]) == "#endif" {
@@ -177,12 +186,34 @@ func GetTokens(source []byte) []*token {
 			}
 
 			for true {
-				/*i1 := bytes.Index(source[i:], []byte("\n"))
-				i2 := bytes.Index(source[i:], []byte("//"))
-				i3 := bytes.Index(source[i:], []byte("/*"))
-				i4 := bytes.Index(source[i:], []byte("/"))*/
+				i1 := strings.Index(source[i:], "\n")
+				i2 := strings.Index(source[i:], "//")
+				i3 := strings.Index(source[i:], "/*")
+				i4 := strings.Index(source[i:], "/")
 
+				i = minPositiveValue([]int{i1, i2, i3, i4})
+
+				if source[i] == '"' {
+					i = strings.Index(source[i+1:], "\"") + 1
+					if i > 0 {
+						continue
+					}
+				}
+
+				/*
+				   if not (i == i1 and source[i-1] == '\\'):
+				       if got_if:
+				           condition = source[start+4:i].lstrip()
+				           if (condition.startswith('0') or
+				               condition.startswith('(0)')):
+				               ignore_errors = True
+				       break
+				   i += 1*/
+				i++
 			}
+		} else if c == '\\' {
+			i++
+			continue
 		} else if ignoreErrors {
 			fmt.Println("Dunno")
 		} else {
