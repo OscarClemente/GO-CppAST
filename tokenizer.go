@@ -200,6 +200,16 @@ func GetTokens(source string) []*token {
 					}
 				}
 
+				if !(i == i1 && source[i-1] == '\\') {
+					if gotIf {
+						condition := strings.TrimLeft(source[start+4:i], " ")
+						if strings.HasPrefix(condition, "0") ||
+							strings.HasPrefix(condition, "(0)") {
+							ignoreErrors = true
+						}
+					}
+				}
+
 				/*
 				   if not (i == i1 and source[i-1] == '\\'):
 				       if got_if:
