@@ -72,8 +72,7 @@ func GetTokens(source string) []*token {
 	letters := "abcdefghijklmnopqrstuvwxyz"
 	numChars := "0123456789"
 	extraChar := "_$"
-	alphaNumeric := letters + strings.ToUpper(letters) + numChars
-	validChars := alphaNumeric + extraChar
+	validChars := letters + strings.ToUpper(letters) + numChars + extraChar
 	hexDigits := "0123456789abcdefABCDEF"
 	intOrFloatDigits := "0123456789eE-+"
 	intOrFloatDigits2 := "0123456789eE-+."
