@@ -190,7 +190,7 @@ func GetTokens(source string) []*token {
 				i3 := strings.Index(source[i:], "/*")
 				i4 := strings.Index(source[i:], "/")
 
-				i = minPositiveValue([]int{i1, i2, i3, i4})
+				i = minPositiveValue([]int{i1, i2, i3, i4}) + i
 
 				if source[i] == '"' {
 					i = strings.Index(source[i+1:], "\"") + 1
@@ -207,6 +207,7 @@ func GetTokens(source string) []*token {
 							ignoreErrors = true
 						}
 					}
+					break
 				}
 
 				/*
