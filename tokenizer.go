@@ -8,6 +8,14 @@ import (
 	"unicode"
 )
 
+func findInString(source string, pos int, substr string) int {
+	i := strings.Index(source[pos:], substr)
+	if i != -1 {
+		i += pos
+	}
+	return i
+}
+
 func getString(source string, start int, i int) int {
 	i = strings.Index(source[i+1:], "\"") + i + 1
 	for source[i-1] == '\\' {
