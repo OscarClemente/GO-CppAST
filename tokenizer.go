@@ -9,7 +9,7 @@ import (
 )
 
 func getString(source string, start int, i int) int {
-	i = strings.Index(source[i+1:], "\"")
+	i = strings.Index(source[i+1:], "\"") + i + 1
 	for source[i-1] == '\\' {
 		// count trailing backslashes
 		backslashCount := 1
@@ -22,19 +22,19 @@ func getString(source string, start int, i int) int {
 		if backslashCount%2 == 0 {
 			break
 		}
-		i = strings.Index(source[i+1:], "\"")
+		i = strings.Index(source[i+1:], "\"") + i + 1
 	}
 	return i + 1
 }
 
 func getChar(source string, start int, i int) int {
-	i = strings.Index(source[i+1:], "'")
+	i = strings.Index(source[i+1:], "'") + i + 1
 	for source[i-1] == '\\' {
 		// Need special case '\\'
 		if (i-2) > start && source[i-2] == '\\' {
 			break
 		}
-		i = strings.Index(source[i+1:], "'")
+		i = strings.Index(source[i+1:], "'") + i + 1
 	}
 	// Unterminated single quotes
 	if i < 0 {
@@ -57,7 +57,6 @@ func isStringInStringSlice(referenceString string, ss []string) bool {
 	return false
 }
 
-//i = min([x for x in (i1, i2, i3, i4, end) if x != -1])
 func minPositiveValue(iSlice []int) int {
 	min := math.MaxInt32
 	for _, val := range iSlice {
@@ -78,7 +77,6 @@ func GetTokens(source string) []*token {
 	intOrFloatDigits2 := "0123456789eE-+."
 	strPrefixes := []string{"R", "u8", "u8R", "u", "uR", "U", "UR", "L", "LR"}
 
-	fmt.Println(hexDigits)
 	ignoreErrors := false
 	countIfs := 0
 
@@ -105,22 +103,21 @@ func GetTokens(source string) []*token {
 				i++
 			}
 			if source[i] == '\'' && (i-start) == 1 && strings.ContainsAny("uUL", source[start:i]) {
-				//(source[start] == 'u' || source[start] == 'U' || source[start] == 'L') {
 				// u, U and L are valid prefixes
 				tokenType = Constant
 				i = getChar(source, start, i)
-			} else if source[i] == '\'' && isStringInStringSlice(source[start:i], strPrefixes) { // missing check of prefixes
+			} else if source[i] == '"' && isStringInStringSlice(source[start:i], strPrefixes) {
 				tokenType = Constant
 				i = getString(source, start, i)
 			}
 		} else if c == '/' && source[i+1] == '/' { // Find // comments
-			i = strings.Index(source[i+1:], "\n")
+			i = strings.Index(source[i+1:], "\n") + i + 1
 			if i == -1 {
 				i = end
 			}
 			continue
 		} else if c == '/' && source[i+1] == '*' { // Find /* comments */
-			i = strings.Index(source[i+1:], "*/") + 2
+			i = strings.Index(source[i+1:], "*/") + i + 1
 			continue
 		} else if isByteInString(c, ":+-<>&|*=") {
 			tokenType = Syntax
@@ -209,16 +206,6 @@ func GetTokens(source string) []*token {
 					}
 					break
 				}
-
-				/*
-				   if not (i == i1 and source[i-1] == '\\'):
-				       if got_if:
-				           condition = source[start+4:i].lstrip()
-				           if (condition.startswith('0') or
-				               condition.startswith('(0)')):
-				               ignore_errors = True
-				       break
-				   i += 1*/
 				i++
 			}
 		} else if c == '\\' {
