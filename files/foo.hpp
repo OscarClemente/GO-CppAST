@@ -6,4 +6,5 @@ class foo : IBar
     virtual void function(int val);
     std::string test = R"hello";
     char c = u'z';
+    // yeah
 };
