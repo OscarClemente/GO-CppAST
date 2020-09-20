@@ -6,6 +6,8 @@ import (
 	"unicode"
 )
 
+// getNameOrPrefixedConstant finds a name token from the provided position in the source string
+// this will also find a constant token in case the the constant is prefixed with chars.
 func getNameOrPrefixedConstant(source string, i, start int) (TokenType, int) {
 	strPrefixes := []string{"R", "u8", "u8R", "u", "uR", "U", "UR", "L", "LR"}
 	var tokenType TokenType = Name
@@ -25,6 +27,7 @@ func getNameOrPrefixedConstant(source string, i, start int) (TokenType, int) {
 	return tokenType, i
 }
 
+// ignoreDoubleSlashComment will return the position after the double slash comment ends
 func ignoreDoubleSlashComment(source string, i, end int) int {
 	i = findInString(source, i+1, "\n")
 	if i == -1 {
@@ -33,6 +36,7 @@ func ignoreDoubleSlashComment(source string, i, end int) int {
 	return i
 }
 
+// getOperator returns the position of the a boolean or math operator
 func getOperator(source string, i int) (TokenType, int) {
 	var tokenType TokenType = Syntax
 	c := source[i]
@@ -50,6 +54,9 @@ func getOperator(source string, i int) (TokenType, int) {
 	return tokenType, i
 }
 
+// getSyntaxCharacterOrConstant returns the position at which the syntax character ends
+// It is also possible for this to return a constant if the constant is defined as a float
+// or double that begins with just the dot char and no 0 before it.
 func getSyntaxCharacterOrConstant(source string, i int) (TokenType, int) {
 	var tokenType TokenType = Syntax
 	c := source[i]
@@ -68,6 +75,7 @@ func getSyntaxCharacterOrConstant(source string, i int) (TokenType, int) {
 	return tokenType, i
 }
 
+// getInteger returns the position at which the provided integer ends in the provided string
 func getInteger(source string, i int) (TokenType, int) {
 	var tokenType TokenType = Constant
 	c := source[i]
@@ -93,6 +101,8 @@ func getInteger(source string, i int) (TokenType, int) {
 	return tokenType, i
 }
 
+// getPreProcessor tries to match to any preprocessor directive and return its position in the string
+// preprocessor matching is a little hard so this might still have some issues.
 func getPreProcessor(source string, i, start, countIfs int) (TokenType, int, int, bool) {
 	var tokenType TokenType = Preprocessor
 	gotIf := source[i:i+3] == "#if" && unicode.IsSpace(rune(source[i+3]))
@@ -138,6 +148,7 @@ func getPreProcessor(source string, i, start, countIfs int) (TokenType, int, int
 	return tokenType, i, countIfs, ignoreErrors
 }
 
+// GetTokens returns a slice of token pointers found within the provided string
 func GetTokens(source string) []*token {
 	ignoreErrors := false
 	countIfs := 0
