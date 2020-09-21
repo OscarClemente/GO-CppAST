@@ -78,21 +78,21 @@ func getSyntaxCharacterOrConstant(source string, i int) (TokenType, int) {
 // getInteger returns the position at which the provided integer ends in the provided string
 func getInteger(source string, i int) (TokenType, int) {
 	var tokenType TokenType = Constant
+	iEnd := len(source) - 1
 	c := source[i]
-
 	if c == '0' && isByteInString(source[i+1], "xX") {
 		i += 2
-		for isByteInString(source[i], hexDigits) {
+		for i <= iEnd && isByteInString(source[i], hexDigits) {
 			i++
 		}
 	} else {
-		for isByteInString(source[i], intOrFloatDigits2) {
+		for i <= iEnd && isByteInString(source[i], intOrFloatDigits2) {
 			i++
 		}
 	}
 	for _, suffix := range []string{"ull", "ll", "ul", "l", "f", "u"} {
 		size := len(suffix)
-		if suffix == strings.ToLower(source[i:i+size]) {
+		if i+size <= iEnd && suffix == strings.ToLower(source[i:i+size]) {
 			i += size
 			break
 		}
