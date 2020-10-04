@@ -56,6 +56,7 @@ type lexer struct {
 
 // next returns the next rune in the input.
 func (l *lexer) next() rune {
+	// check we didn't go out of bounds
 	if int(l.pos) >= len(l.input) {
 		l.width = 0
 		return eof
