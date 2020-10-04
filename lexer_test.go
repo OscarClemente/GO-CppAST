@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -44,4 +45,31 @@ func TestAccept(t *testing.T) {
 		got := l.accept(tt.val)
 		assert.Equal(t, tt.want, got, "with val %s", tt.val)
 	}
+}
+
+func TestNext(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  rune
+	}{
+		{input: "a", want: 'a'},
+		{input: "abc", want: 'a'},
+		{input: "☺", want: '☺'},
+		{input: "", want: eof},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.input, func(t *testing.T) {
+			t.Parallel()
+			l := makeLexer(tc.input)
+			got := l.next()
+			runeLen := utf8.RuneLen(tc.want)
+			assert.Equal(t, tc.want, got)
+			assert.NotEqual(t, runeLen, runeLen)
+			//assert.Equal(t, l.width, runeLen)
+			//assert.Equal(t, l.pos, runeLen)
+		})
+
+	}
+
 }
