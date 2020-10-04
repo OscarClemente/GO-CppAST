@@ -73,13 +73,6 @@ func (l *lexer) next() rune {
 	return r
 }
 
-// peek returns but does not consume the next rune in the input.
-func (l *lexer) peek() rune {
-	r := l.next()
-	l.backup()
-	return r
-}
-
 // backup steps back one rune. Can only be called once per call of next.
 func (l *lexer) backup() {
 	l.pos -= l.width
@@ -89,11 +82,11 @@ func (l *lexer) backup() {
 	}
 }
 
-// emit passes an item back to the client.
-func (l *lexer) emit(t itemType) {
-	l.items <- item{t, l.start, l.input[l.start:l.pos], l.startLine}
-	l.start = l.pos
-	l.startLine = l.line
+// peek returns but does not consume the next rune in the input.
+func (l *lexer) peek() rune {
+	r := l.next()
+	l.backup()
+	return r
 }
 
 // accept consumes the next rune if it's from the valid set.
@@ -113,6 +106,13 @@ func (l *lexer) acceptRun(valid string) bool {
 	}
 	l.backup()
 	return existsAny
+}
+
+// emit passes an item back to the client.
+func (l *lexer) emit(t itemType) {
+	l.items <- item{t, l.start, l.input[l.start:l.pos], l.startLine}
+	l.start = l.pos
+	l.startLine = l.line
 }
 
 // errorf returns an error token and terminates the scan by passing
