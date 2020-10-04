@@ -42,7 +42,7 @@ type ILexer interface {
 	drain()
 }
 
-// cppLexer holds the state of the lexing.
+// lexer holds the state of the lexing.
 type lexer struct {
 	name      string
 	input     string
