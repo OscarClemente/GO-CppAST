@@ -155,13 +155,13 @@ func TestAcceptRun(t *testing.T) {
 		want    bool
 		wantPos int
 	}{
-		{input: "abcd☺", val: "b", want: false, wantPos: 0},
-		{input: "abcd☺", val: "12", want: false, wantPos: 0},
-		{input: "abcd☺", val: "a", want: true, wantPos: 1},
-		{input: "abcd☺", val: "de", want: false, wantPos: 0},
-		{input: "abcd☺", val: "abcd", want: true, wantPos: 1},
-		{input: "abcd☺", val: "☹️", want: false, wantPos: 0},
-		{input: "abcd☺", val: "abcd☺", want: true, wantPos: 1},
+		{input: "abcd☺", val: "b", want: false},
+		{input: "abcd☺", val: "12", want: false},
+		{input: "abcd☺", val: "a", want: true},
+		{input: "abcd☺", val: "de", want: false},
+		{input: "abcd☺", val: "abcd", want: true},
+		{input: "☺ab", val: "☹️", want: false},
+		{input: "☺ab", val: "abcd☺", want: true},
 	}
 
 	for _, tc := range testCases {
@@ -169,7 +169,6 @@ func TestAcceptRun(t *testing.T) {
 			l := makeLexer(tc.input)
 			got := l.accept(tc.val)
 			assert.Equal(t, tc.want, got)
-			assert.Equal(t, tc.wantPos, l.pos)
 		})
 	}
 }
