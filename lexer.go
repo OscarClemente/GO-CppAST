@@ -84,8 +84,12 @@ func (l *lexer) backup() {
 
 // peek returns but does not consume the next rune in the input.
 func (l *lexer) peek() rune {
-	r := l.next()
-	l.backup()
+	if int(l.pos) >= len(l.input) {
+		return eof
+	}
+
+	r, _ := utf8.DecodeRuneInString(l.input[l.pos:])
+
 	return r
 }
 
